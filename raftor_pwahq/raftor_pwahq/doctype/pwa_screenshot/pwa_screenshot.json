@@ -1,0 +1,18 @@
+{
+  "doctype": "DocType",
+  "name": "PWA Screenshot",
+  "module": "Raftor Pwahq",
+  "istable": 1,
+  "fields": [
+    {"fieldname":"image",      "fieldtype":"Attach Image","label":"Screenshot","reqd":1,"in_list_view":1},
+    {"fieldname":"label",      "fieldtype":"Data",       "label":"Label",     "in_list_view":1},
+    {"fieldname":"form_factor","fieldtype":"Select",     "label":"Form Factor","in_list_view":1,
+     "options":"narrow\nwide","default":"narrow",
+     "description":"narrow=mobile portrait, wide=desktop landscape. Add one of each for Richer Install UI."},
+    {"fieldname":"sizes",      "fieldtype":"Data",       "label":"Size (WxH)","in_list_view":1,
+     "description":"Actual pixel size, e.g. 1280x720 (wide) or 720x1280 (narrow)"}
+  ],
+  "permissions": [],
+  "sort_field": "idx",
+  "sort_order": "ASC"
+}

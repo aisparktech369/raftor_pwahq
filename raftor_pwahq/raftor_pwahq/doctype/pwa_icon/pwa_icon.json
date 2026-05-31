@@ -1,0 +1,17 @@
+{
+  "doctype": "DocType",
+  "name": "PWA Icon",
+  "module": "Raftor Pwahq",
+  "istable": 1,
+  "fields": [
+    {"fieldname":"icon_image","fieldtype":"Attach Image","label":"Image", "reqd":1,"in_list_view":1},
+    {"fieldname":"sizes",    "fieldtype":"Data",        "label":"Actual Size (WxH)","reqd":1,"in_list_view":1,
+     "description":"Enter the real pixel dimensions, e.g. 512x512 or 1600x1600"},
+    {"fieldname":"purpose",  "fieldtype":"Select",      "label":"Purpose","in_list_view":1,
+     "options":"any\nmaskable","default":"any",
+     "description":"Add two rows (any + maskable) for full browser support"}
+  ],
+  "permissions": [],
+  "sort_field": "idx",
+  "sort_order": "ASC"
+}

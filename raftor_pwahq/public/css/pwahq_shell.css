@@ -1,0 +1,477 @@
+/* ═══════════════════════════════════════════════════════════════════
+   raftor_pwahq — Mobile Shell
+   Design: card-based, bottom nav, smooth transitions, dark support
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  --pwahq-primary:    var(--pwahq-theme, #1a1a2e);
+  --pwahq-on-primary: #ffffff;
+  --pwahq-surface:    #ffffff;
+  --pwahq-surface-2:  #f5f5f7;
+  --pwahq-border:     rgba(0,0,0,.08);
+  --pwahq-text:       #1a1a1a;
+  --pwahq-text-2:     #6b6b6b;
+  --pwahq-nav-h:      64px;
+  --pwahq-header-h:   56px;
+  --pwahq-radius:     16px;
+  --pwahq-shadow:     0 2px 16px rgba(0,0,0,.10);
+  --pwahq-transition: .22s cubic-bezier(.4,0,.2,1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pwahq-surface:   #1c1c1e;
+    --pwahq-surface-2: #2c2c2e;
+    --pwahq-border:    rgba(255,255,255,.1);
+    --pwahq-text:      #f2f2f7;
+    --pwahq-text-2:    #aeaeb2;
+  }
+}
+
+/* ── Pre-flash guard: hide host content while shell mounts ───────── */
+html[data-pwahq="loading"],
+body[data-pwahq="loading"] { overflow: hidden; }
+
+html[data-pwahq="loading"] body > *:not(#pwahq-splash):not(script):not(style):not(link),
+body[data-pwahq="loading"] > *:not(#pwahq-splash):not(script):not(style):not(link) {
+  visibility: hidden !important;
+}
+
+/* ── Splash screen ────────────────────────────────────────────────── */
+#pwahq-splash {
+  position: fixed; inset: 0; z-index: 99999;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 16px;
+  background: var(--pwahq-primary);
+  color: var(--pwahq-on-primary);
+}
+.pwahq-splash-icon img,
+.pwahq-splash-icon svg { width: 72px; height: 72px; border-radius: 16px; }
+.pwahq-splash-name {
+  font-size: 1.1rem; font-weight: 600; letter-spacing: .02em;
+  color: var(--pwahq-on-primary);
+}
+.pwahq-splash-spinner {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 3px solid rgba(255,255,255,.25);
+  border-top-color: #fff;
+  animation: pwahq-spin .8s linear infinite;
+}
+@keyframes pwahq-spin { to { transform: rotate(360deg); } }
+#pwahq-splash.hiding {
+  opacity: 0; transform: scale(1.04);
+  transition: opacity .22s ease, transform .22s ease;
+}
+
+/* ── Shell container ─────────────────────────────────────────────── */
+body.pwahq-active {
+  padding-top:    calc(var(--pwahq-header-h) + env(safe-area-inset-top, 0)) !important;
+  padding-bottom: var(--pwahq-nav-h) !important;
+  background:     var(--pwahq-surface-2);
+}
+
+/* ── Header ──────────────────────────────────────────────────────── */
+#pwahq-header {
+  position: fixed; top: 0; left: 0; right: 0;
+  /* Extend behind the status bar / notch — requires viewport-fit=cover  */
+  padding-top: env(safe-area-inset-top, 0);
+  height: calc(var(--pwahq-header-h) + env(safe-area-inset-top, 0));
+  background: var(--pwahq-primary);
+  color: var(--pwahq-on-primary);
+  display: flex; align-items: flex-end; gap: 8px;
+  padding-right: 8px; padding-left: 4px; padding-bottom: 0;
+  z-index: 1000;
+  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+  -webkit-app-region: drag;
+}
+.pwahq-hbtn {
+  -webkit-app-region: no-drag;
+  background: none; border: none; cursor: pointer;
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--pwahq-on-primary);
+  transition: background var(--pwahq-transition);
+}
+.pwahq-hbtn:active,
+.pwahq-hbtn:hover { background: rgba(255,255,255,.15); }
+.pwahq-hbtn svg { width: 22px; height: 22px; }
+#pwahq-title {
+  flex: 1; font-size: 1.05rem; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  -webkit-app-region: drag;
+}
+#pwahq-header-actions { display: flex; gap: 2px; -webkit-app-region: no-drag; }
+
+/* ── Bottom navigation ───────────────────────────────────────────── */
+#pwahq-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: var(--pwahq-nav-h);
+  background: var(--pwahq-surface);
+  border-top: 1px solid var(--pwahq-border);
+  display: flex; align-items: stretch;
+  z-index: 1000;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  box-shadow: 0 -2px 12px rgba(0,0,0,.06);
+}
+.pwahq-nav-item {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 3px;
+  text-decoration: none; border: none; background: none; cursor: pointer;
+  color: var(--pwahq-text-2); font-size: .68rem; font-weight: 500;
+  padding: 0; transition: color var(--pwahq-transition);
+  position: relative;
+}
+.pwahq-nav-item svg { width: 22px; height: 22px; }
+.pwahq-nav-item.active { color: var(--pwahq-primary); }
+.pwahq-nav-item.active::after {
+  content: "";
+  position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
+  width: 32px; height: 3px; border-radius: 2px;
+  background: var(--pwahq-primary);
+}
+.pwahq-nav-item:active { opacity: .7; }
+
+/* ── Drawer (side panel) ─────────────────────────────────────────── */
+#pwahq-drawer-scrim {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(0,0,0,.45);
+  opacity: 0; pointer-events: none;
+  transition: opacity var(--pwahq-transition);
+}
+#pwahq-drawer-scrim.open { opacity: 1; pointer-events: all; }
+
+#pwahq-drawer {
+  position: fixed; top: 0; left: 0; bottom: 0; z-index: 2001;
+  width: min(320px, 85vw);
+  background: var(--pwahq-surface);
+  display: flex; flex-direction: column;
+  transform: translateX(-100%);
+  transition: transform var(--pwahq-transition);
+  box-shadow: 4px 0 24px rgba(0,0,0,.18);
+  padding-top: env(safe-area-inset-top, 0);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+#pwahq-drawer.open { transform: translateX(0); }
+
+#pwahq-drawer-header {
+  background: var(--pwahq-primary);
+  padding: 28px 20px 20px;
+  color: var(--pwahq-on-primary);
+  display: flex; align-items: center; gap: 14px;
+}
+.pwahq-drawer-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(255,255,255,.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; font-weight: 700; color: #fff;
+  overflow: hidden;
+}
+.pwahq-drawer-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.pwahq-drawer-user { flex: 1; min-width: 0; }
+.pwahq-drawer-name {
+  font-weight: 600; font-size: .95rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pwahq-drawer-role { font-size: .78rem; opacity: .75; margin-top: 2px; }
+
+#pwahq-drawer-body { flex: 1; overflow-y: auto; padding: 8px 0; }
+
+.pwahq-drawer-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 20px; text-decoration: none;
+  color: var(--pwahq-text); font-size: .95rem; font-weight: 500;
+  transition: background var(--pwahq-transition);
+}
+.pwahq-drawer-item:active,
+.pwahq-drawer-item:hover { background: var(--pwahq-surface-2); }
+.pwahq-drawer-item.active { color: var(--pwahq-primary); background: var(--pwahq-surface-2); }
+.pwahq-drawer-item svg { width: 20px; height: 20px; opacity: .7; flex-shrink: 0; }
+.pwahq-drawer-item.active svg { opacity: 1; }
+.pwahq-drawer-divider { height: 1px; background: var(--pwahq-border); margin: 8px 0; }
+
+.pwahq-drawer-section-label {
+  padding: 6px 20px 4px;
+  font-size: .72rem; font-weight: 600; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--pwahq-text-2);
+}
+
+/* Accordion group toggle */
+.pwahq-drawer-group {
+  width: 100%; text-align: left; background: none; border: none; cursor: pointer;
+}
+.pwahq-drawer-group .pwahq-chevron {
+  margin-left: auto; opacity: .5; flex-shrink: 0;
+  transition: transform var(--pwahq-transition);
+}
+.pwahq-drawer-group.open .pwahq-chevron { transform: rotate(180deg); }
+
+/* Subitems (collapsed by default) */
+.pwahq-drawer-subitems { display: none; }
+.pwahq-drawer-subitems.open { display: block; }
+
+.pwahq-drawer-subitem {
+  display: flex; align-items: center;
+  padding: 11px 20px 11px 52px;
+  text-decoration: none;
+  color: var(--pwahq-text); font-size: .88rem;
+  transition: background var(--pwahq-transition);
+  border-left: 2px solid transparent;
+}
+.pwahq-drawer-subitem:active,
+.pwahq-drawer-subitem:hover { background: var(--pwahq-surface-2); }
+.pwahq-drawer-subitem.active {
+  color: var(--pwahq-primary);
+  border-left-color: var(--pwahq-primary);
+  background: var(--pwahq-surface-2);
+}
+
+/* ── Install prompt banner ───────────────────────────────────────── */
+#pwahq-install-banner {
+  position: fixed; bottom: calc(var(--pwahq-nav-h) + 12px); left: 12px; right: 12px;
+  z-index: 1500;
+  background: var(--pwahq-surface);
+  border-radius: var(--pwahq-radius);
+  box-shadow: var(--pwahq-shadow);
+  padding: 16px;
+  display: flex; align-items: center; gap: 12px;
+  border: 1px solid var(--pwahq-border);
+  animation: pwahq-slide-up .28s cubic-bezier(.4,0,.2,1);
+}
+#pwahq-install-banner[hidden] { display: none !important; }
+@keyframes pwahq-slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.pwahq-install-icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  overflow: hidden; flex-shrink: 0;
+}
+.pwahq-install-icon img { width: 100%; height: 100%; object-fit: cover; }
+.pwahq-install-text { flex: 1; min-width: 0; }
+.pwahq-install-title { font-weight: 600; font-size: .9rem; color: var(--pwahq-text); }
+.pwahq-install-sub   { font-size: .78rem; color: var(--pwahq-text-2); margin-top: 2px; }
+.pwahq-install-actions { display: flex; gap: 8px; margin-top: 12px; }
+.pwahq-btn-primary {
+  flex: 1; padding: 10px; border: none; border-radius: 10px;
+  background: var(--pwahq-primary); color: var(--pwahq-on-primary);
+  font-size: .88rem; font-weight: 600; cursor: pointer;
+  transition: opacity var(--pwahq-transition);
+}
+.pwahq-btn-ghost {
+  flex: 1; padding: 10px; border: 1px solid var(--pwahq-border); border-radius: 10px;
+  background: none; color: var(--pwahq-text-2);
+  font-size: .88rem; cursor: pointer;
+}
+.pwahq-btn-primary:active,
+.pwahq-btn-ghost:active { opacity: .7; }
+
+/* ── Toast notifications ─────────────────────────────────────────── */
+#pwahq-toasts {
+  position: fixed; top: calc(var(--pwahq-header-h) + env(safe-area-inset-top, 0) + 8px); right: 12px;
+  z-index: 3000; display: flex; flex-direction: column; gap: 8px;
+  pointer-events: none;
+}
+.pwahq-toast {
+  padding: 12px 16px; border-radius: 12px;
+  background: #333; color: #fff;
+  font-size: .88rem; font-weight: 500;
+  box-shadow: 0 4px 16px rgba(0,0,0,.2);
+  pointer-events: all;
+  animation: pwahq-toast-in .2s ease;
+  max-width: 280px;
+}
+.pwahq-toast.success { background: #16a34a; }
+.pwahq-toast.error   { background: #dc2626; }
+.pwahq-toast.info    { background: #2563eb; }
+.pwahq-toast.hiding  { animation: pwahq-toast-out .2s ease forwards; }
+@keyframes pwahq-toast-in  { from { opacity:0; transform: translateX(20px); } to { opacity:1; transform: none; } }
+@keyframes pwahq-toast-out { from { opacity:1; transform: none; } to { opacity:0; transform: translateX(20px); } }
+
+/* ── Offline banner ──────────────────────────────────────────────── */
+#pwahq-offline-bar {
+  position: fixed; top: calc(var(--pwahq-header-h) + env(safe-area-inset-top, 0)); left: 0; right: 0;
+  z-index: 999; background: #92400e; color: #fef3c7;
+  font-size: .8rem; text-align: center; padding: 6px 16px;
+  transform: translateY(-100%); transition: transform var(--pwahq-transition);
+}
+#pwahq-offline-bar.visible { transform: translateY(0); }
+
+/* ── Hide native footer when PWA shell is active ────────────────── */
+body.pwahq-active footer,
+body.pwahq-active .web-footer { display: none !important; }
+
+/* ── Tap-highlight suppression + touch feedback ─────────────────── */
+body.pwahq-active { -webkit-tap-highlight-color: transparent; }
+body.pwahq-active .pwahq-nav-item,
+body.pwahq-active .pwahq-hbtn,
+body.pwahq-active .pwahq-drawer-item,
+body.pwahq-active .pwahq-drawer-subitem,
+body.pwahq-active .pwahq-drawer-group,
+body.pwahq-active .pwahq-btn-primary,
+body.pwahq-active .pwahq-btn-ghost { touch-action: manipulation; }
+
+/* ── Drawer scroll lock ──────────────────────────────────────────── */
+body.pwahq-scroll-locked { overflow: hidden !important; }
+
+/* ── Skeleton shimmer ────────────────────────────────────────────── */
+@keyframes pwahq-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+.pwahq-skeleton {
+  background: linear-gradient(90deg,
+    var(--pwahq-surface-2) 25%,
+    var(--pwahq-border)    50%,
+    var(--pwahq-surface-2) 75%);
+  background-size: 200% 100%;
+  animation: pwahq-shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+.pwahq-skeleton-text   { height: 1em;  width: 60%; margin: .4em 0; }
+.pwahq-skeleton-block  { height: 48px; width: 100%; margin: .4em 0; }
+.pwahq-skeleton-avatar { height: 44px; width: 44px; border-radius: 50%; }
+
+/* ── Offline bar flex layout + retry button ──────────────────────── */
+#pwahq-offline-bar { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.pwahq-offline-retry {
+  padding: 3px 10px; border: 1px solid rgba(254,243,199,.5); border-radius: 6px;
+  background: none; color: #fef3c7; font-size: .78rem; font-weight: 500;
+  cursor: pointer; white-space: nowrap; touch-action: manipulation;
+}
+.pwahq-offline-retry:active { opacity: .7; }
+
+/* ── Page transition progress bar ───────────────────────────────── */
+#pwahq-progress {
+  position: fixed;
+  top: calc(var(--pwahq-header-h) + env(safe-area-inset-top, 0));
+  left: 0; width: 0; height: 2px;
+  background: rgba(255,255,255,.75);
+  z-index: 9998; pointer-events: none;
+  opacity: 0; transition: none;
+}
+#pwahq-progress.running {
+  opacity: 1; width: 85%;
+  transition: width 8s cubic-bezier(0.1, 0.05, 0, 1);
+}
+#pwahq-progress.done {
+  width: 100%; opacity: 0;
+  transition: width .15s linear, opacity .25s ease .15s;
+}
+
+/* ── Pull-to-refresh ─────────────────────────────────────────────── */
+#pwahq-ptr {
+  height: 0; overflow: hidden;
+  display: flex; align-items: flex-end; justify-content: center;
+  transition: height .2s ease;
+}
+.pwahq-ptr-icon {
+  width: 28px; height: 28px; border-radius: 50%; margin-bottom: 10px;
+  border: 2.5px solid var(--pwahq-border);
+  border-top-color: var(--pwahq-primary);
+  opacity: 0; transition: opacity .15s;
+}
+#pwahq-ptr.ready .pwahq-ptr-icon,
+#pwahq-ptr.refreshing .pwahq-ptr-icon {
+  opacity: 1;
+  animation: pwahq-spin .7s linear infinite;
+}
+
+/* ── Desk mode: suppress Frappe's navbar + sidebar, fix layout ───── */
+body.pwahq-desk-active #navbar-main,
+body.pwahq-desk-active .frappe-app > .navbar,
+body.pwahq-desk-active body > .sticky-top { display: none !important; }
+
+/* Hide the left sidebar — its links are merged into the PWA drawer */
+body.pwahq-desk-active .layout-side-section,
+body.pwahq-desk-active .desk-sidebar { display: none !important; }
+
+/* Sidebar toggle button has nothing to toggle — remove it */
+body.pwahq-desk-active .btn-toggle-sidebar,
+body.pwahq-desk-active .sidebar-toggle-btn { display: none !important; }
+
+/* Expand the main content to fill the width the sidebar vacated */
+body.pwahq-desk-active .layout-main-section,
+body.pwahq-desk-active .layout-main-section-wrapper { width: 100% !important; margin-left: 0 !important; }
+
+/* Cancel Frappe's own top-padding that accounts for the navbar it no longer has */
+body.pwahq-desk-active .page-container,
+body.pwahq-desk-active .frappe-app .page-container { margin-top: 0 !important; }
+
+/* PWA header must sit above Frappe sidebars (1020) but below Frappe modals (1050) */
+body.pwahq-desk-active #pwahq-header { z-index: 1040; }
+
+/* Page title is shown in the PWA header — hide it and the breadcrumbs from page-head.
+   The .page-actions (Save, Submit, New, etc.) stay visible. */
+body.pwahq-desk-active .page-head .title-area,
+body.pwahq-desk-active .page-head .breadcrumb-area,
+body.pwahq-desk-active .page-head .page-breadcrumbs { display: none !important; }
+
+/* With title-area gone, action buttons fill the row — compact the row height */
+body.pwahq-desk-active .page-head .row,
+body.pwahq-desk-active .page-head .container { min-height: 44px !important; }
+body.pwahq-desk-active .page-head .page-actions { margin-left: auto !important; }
+
+/* Sticky page-head must clear the fixed PWA header, not slide under it */
+body.pwahq-desk-active .page-head.sticky { top: var(--pwahq-header-h) !important; }
+
+/* Hide Frappe's own loading overlay — PWA progress bar replaces it */
+body.pwahq-desk-active #freeze,
+body.pwahq-desk-active .freeze-message,
+body.pwahq-desk-active .page-loading-indicator { display: none !important; }
+
+/* Smooth momentum scrolling on iOS */
+body.pwahq-desk-active .layout-main-section { -webkit-overflow-scrolling: touch; }
+
+/* GPU-composited layers for the animated PWA shell elements */
+#pwahq-nav, #pwahq-drawer { will-change: transform; }
+#pwahq-header { will-change: transform; }
+
+/* ── Desk: touch-first UI overrides ─────────────────────────────── */
+
+/* Prevent iOS auto-zoom on input focus — any font-size < 16px triggers it */
+body.pwahq-desk-active input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+body.pwahq-desk-active select,
+body.pwahq-desk-active textarea { font-size: 16px !important; }
+
+/* Touch targets — 40px min keeps taps reliable on any thumb size */
+body.pwahq-desk-active .btn { min-height: 40px !important; }
+body.pwahq-desk-active .frappe-list .list-row-col {
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+}
+
+/* Cap all Frappe UI transitions at 0.1 s — feels 2–3× snappier on mobile.
+   Targets only Frappe's content tree, not our own shell elements. */
+body.pwahq-desk-active .frappe-app *,
+body.pwahq-desk-active .page-container * {
+  transition-duration: 0.1s !important;
+}
+
+/* Contain overscroll so inner panels don't chain up to the body */
+body.pwahq-desk-active .layout-main-section { overscroll-behavior: contain; }
+
+/* Horizontal scroll for wide list views without breaking layout */
+body.pwahq-desk-active .frappe-list .list-row-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Workspace cards: 2-column grid on phones (Frappe defaults to 4) */
+@media (max-width: 480px) {
+  body.pwahq-desk-active .widget-group-body {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* ── Only active on mobile ───────────────────────────────────────── */
+@media (min-width: 769px) {
+  #pwahq-header, #pwahq-nav, #pwahq-drawer,
+  #pwahq-drawer-scrim, #pwahq-install-banner,
+  #pwahq-offline-bar, #pwahq-progress, #pwahq-ptr { display: none !important; }
+  body.pwahq-active {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  html[data-pwahq="loading"] body > *,
+  body[data-pwahq="loading"] > * { visibility: visible !important; }
+}

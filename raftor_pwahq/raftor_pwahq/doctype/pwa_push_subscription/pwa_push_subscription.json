@@ -1,0 +1,19 @@
+{
+  "doctype": "DocType",
+  "name": "PWA Push Subscription",
+  "module": "Raftor Pwahq",
+  "istable": 0,
+  "issingle": 0,
+  "autoname": "hash",
+  "title_field": "user",
+  "fields": [
+    {"fieldname":"user",       "fieldtype":"Link",      "label":"User",       "options":"User", "reqd":1, "in_list_view":1},
+    {"fieldname":"endpoint",   "fieldtype":"Text",      "label":"Endpoint",   "reqd":1, "no_copy":1},
+    {"fieldname":"col_break_1","fieldtype":"Column Break"},
+    {"fieldname":"p256dh",     "fieldtype":"Password",  "label":"P256DH Key", "no_copy":1},
+    {"fieldname":"auth",       "fieldtype":"Password",  "label":"Auth Secret","no_copy":1}
+  ],
+  "permissions": [
+    {"role":"System Manager","read":1,"write":1,"create":1,"delete":1}
+  ]
+}

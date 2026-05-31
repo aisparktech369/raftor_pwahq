@@ -1,0 +1,18 @@
+{
+  "doctype": "DocType",
+  "name": "PWA Desk Nav Item",
+  "module": "Raftor Pwahq",
+  "istable": 1,
+  "fields": [
+    {"fieldname":"label", "fieldtype":"Data",   "label":"Label", "reqd":1, "in_list_view":1},
+    {"fieldname":"url",   "fieldtype":"Data",   "label":"Route", "reqd":1, "in_list_view":1,
+     "description":"Frappe route: 'sales-order', 'buying', or full path '/app/sales-order'"},
+    {"fieldname":"icon",  "fieldtype":"Select", "label":"Icon",  "in_list_view":1,
+     "options":"home\nshopping-bag\nshopping-cart\nuser\nsearch\nheart\nbell\nbook\npackage\nstar\nsettings\ncalendar\ntruck\nfile\nfilter"},
+    {"fieldname":"roles", "fieldtype":"Data",   "label":"Roles (comma-separated)",
+     "description":"Leave blank to show to all System Users"}
+  ],
+  "permissions": [],
+  "sort_field": "idx",
+  "sort_order": "ASC"
+}

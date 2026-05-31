@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Offline — {{ app_name }}</title>
+<style>
+  :root { --oc-primary: {{ theme_color }}; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 100vh; gap: 20px; padding: 32px 24px;
+    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--pwahq-surface-2, #f5f5f7);
+    color: var(--pwahq-text, #1a1a1a);
+    text-align: center;
+  }
+  .oc-icon { opacity: .35; }
+  {% if icon_url %}
+  .oc-app-icon {
+    width: 72px; height: 72px; border-radius: 16px;
+    overflow: hidden; margin-bottom: 4px;
+  }
+  .oc-app-icon img { width: 100%; height: 100%; object-fit: cover; }
+  {% endif %}
+  h1 { font-size: 1.3rem; font-weight: 700; }
+  p  { font-size: .92rem; color: var(--pwahq-text-2, #666); max-width: 240px; line-height: 1.5; }
+  .oc-name { font-size: .78rem; opacity: .5; margin-top: -8px; }
+  .oc-retry {
+    padding: 13px 36px; border: none; border-radius: 12px;
+    background: var(--pwahq-primary, var(--oc-primary));
+    color: var(--pwahq-on-primary, #fff);
+    font-size: .95rem; font-weight: 600; cursor: pointer;
+    touch-action: manipulation;
+  }
+  .oc-retry:active { opacity: .8; }
+</style>
+</head>
+<body>
+
+{% if icon_url %}
+<div class="oc-app-icon">
+  <img src="{{ icon_url }}" alt="{{ app_name }}" onerror="this.parentNode.style.display='none'">
+</div>
+{% else %}
+<svg class="oc-icon" width="64" height="64" viewBox="0 0 24 24"
+     fill="none" stroke="currentColor" stroke-width="1.5"
+     stroke-linecap="round" stroke-linejoin="round">
+  <path d="M1 6s4-2 11-2 11 2 11 2"/>
+  <path d="M5 10s2.5-1.5 7-1.5 7 1.5 7 1.5"/>
+  <path d="M8.5 13.5S10 12.5 12 12.5s3.5 1 3.5 1"/>
+  <line x1="2" y1="2" x2="22" y2="22"/>
+  <circle cx="12" cy="17" r="1"/>
+</svg>
+{% endif %}
+
+<div>
+  <h1>You're offline</h1>
+  <p>Check your connection and try again.</p>
+</div>
+
+<p class="oc-name">{{ app_name }}</p>
+
+<button class="oc-retry" onclick="window.location.reload()">Retry</button>
+
+</body>
+</html>
